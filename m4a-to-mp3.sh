@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=$(find . -name "*.mp3")
+files=$(find . -name "*.m4a")
 
 delimiter='./'
 s=$files$delimiter
@@ -16,6 +16,5 @@ declare -a array
 for name in "${array[@]}"
 do
     name="${name%"${name##*[![:space:]]}"}"
-    mpg123 -w "${name%.*}.wav" "$name"
-    sox "${name%.*}.wav" -t raw -r 8000  -c 1 "${name%.*}.sln"
+    ffmpeg -i "$name" -acodec libmp3lame -ab 256k "${name%.*}.mp3"
 done       
