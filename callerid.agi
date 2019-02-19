@@ -5,6 +5,7 @@ require_once "phpagi.php";
 
 $AGI = new AGI();
 $leading = '';
+$final_callerid='';
 
 $outnumber = get_var($AGI, "OUTNUM");
 if ($outnumber[0] == '+') {
@@ -15,6 +16,7 @@ if ($outnumber[0] == '+') {
 $prefix = substr($outnumber, 0, 2);
 if ($prefix == '93') {
     $outnumber = substr($outnumber, 2);
+    $final_callerid = get_final_callerid($outnumber);
     $outnumber = $leading . $outnumber;
     $AGI->set_variable('OUTNUM', $outnumber);
 } else {
@@ -22,8 +24,6 @@ if ($prefix == '93') {
 }
 
 $AGI->verbose('Out number: ' . $outnumber);
-
-$final_callerid = get_final_callerid($outnumber);
 $AGI->verbose('Final call ID: ' . $final_callerid);
 $AGI->set_variable('FINAL_CALLERID', $final_callerid);
 
@@ -57,5 +57,9 @@ function get_final_callerid($outnumber)
     }
 
     $npa = substr($outnumber, 0, 3);
-    return '1' . $npa_array[$npa];
+    if (isset($npa_array[$npa])) {
+            return '1' . $npa_array[$npa];
+    } else {
+        return '';
+    }
 }
