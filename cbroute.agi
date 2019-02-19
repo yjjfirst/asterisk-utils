@@ -1,0 +1,52 @@
+#!/usr/bin/env php
+<?php
+
+require_once "phpagi.php";
+
+$username = "root";
+$password = "";
+$database = "asteriskcdrdb";
+
+$AGI = new AGI();
+$callerid = $AGI->request['agi_callerid'];
+
+if ($callerid[0] == '+') {
+    $callerid = substr($callerid, 1);
+    
+}
+$callerid = "93" . $callerid;
+$AGI->verbose($callerid);
+
+$link = mysqli_connect("localhost", $username, $password, $database);
+if ($link == false) {
+    $AGI->verbose("Error: Could not connect. " . mysqli_connect_error());
+    die();
+}
+
+$AGI->verbose("Connect database successfully.");
+
+
+$sql = "SELECT channel FROM cdr WHERE dst=$callerid ORDER BY calldate DESC LIMIT 1";
+$result = mysqli_query($link, $sql);
+
+if (mysqli_num_rows($result) > 0) {
+     $AGI->verbose("Call back route found.");
+     $row = mysqli_fetch_array($result);
+     $channel = explode("-", $row['channel'])[0];
+     $AGI->set_variable("DST_AGENT", $channel);
+     mysqli_free_result($result);
+} else {
+     $AGI->verbose("No call back route found.");
+}
+
+//helper functions
+function get_var( $agi, $value) {
+    $r = $agi->get_variable( $value );
+
+    if ($r['result'] == 1) {
+        $result = $r['data'];
+        return $result;
+    }
+    return '';
+}
+

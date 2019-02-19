@@ -1,0 +1,61 @@
+#!/usr/bin/env php
+<?php
+
+require_once "phpagi.php";
+
+$AGI = new AGI();
+$leading = '';
+
+$outnumber = get_var($AGI, "OUTNUM");
+if ($outnumber[0] == '+') {
+    $leading = '+';
+    $outnumber = substr($outnumber, 1);
+}
+
+$prefix = substr($outnumber, 0, 2);
+if ($prefix == '93') {
+    $outnumber = substr($outnumber, 2);
+    $outnumber = $leading . $outnumber;
+    $AGI->set_variable('OUTNUM', $outnumber);
+} else {
+    exit (0);
+}
+
+$AGI->verbose('Out number: ' . $outnumber);
+
+$final_callerid = get_final_callerid($outnumber);
+$AGI->verbose('Final call ID: ' . $final_callerid);
+$AGI->set_variable('FINAL_CALLERID', $final_callerid);
+
+
+//helper functions
+function get_var( $agi, $value) {
+    $r = $agi->get_variable( $value );
+
+    if ($r['result'] == 1) {
+        $result = $r['data'];
+        return $result;
+    }
+    return '';
+}
+
+function get_final_callerid($outnumber)
+{
+    global $AGI;
+    $npa_array = array();
+
+    $contents = file_get_contents('/var/lib/asterisk/agi-bin/npa-callerid.txt');
+    $list = explode(PHP_EOL, $contents);
+    
+    foreach ($list as $item) {
+        $s = explode('-', $item);
+        $npa_array[$s[0]] = $s[1];
+    }
+
+    if ($outnumber[0] == '1') {
+        $outnumber = substr($outnumber, 1);
+    }
+
+    $npa = substr($outnumber, 0, 3);
+    return '1' . $npa_array[$npa];
+}
