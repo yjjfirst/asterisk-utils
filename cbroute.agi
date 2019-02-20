@@ -9,6 +9,13 @@ $database = "asteriskcdrdb";
 
 $AGI = new AGI();
 $callerid = $AGI->request['agi_callerid'];
+$did = $AGI->request['agi_dnid'];
+
+if (!did_exists($did)) {
+    $AGI->verbose("Did " . $did . " doesn't exist");
+    die();
+}
+
 
 if ($callerid[0] == '+') {
     $callerid = substr($callerid, 1);
@@ -50,3 +57,31 @@ function get_var( $agi, $value) {
     return '';
 }
 
+
+function did_exists($did)
+{   
+    global $AGI;
+    $numbers = array();
+
+    $contents = file_get_contents('/var/lib/asterisk/agi-bin/npa-callerid.txt');
+    $list = explode(PHP_EOL, $contents);
+    
+    $i = 0;
+    foreach ($list as $item) {
+        $s = explode('-', $item);
+        array_push($numbers,$s[1]);
+        $i++;
+
+    }
+
+    if ($did[0] == '+') {
+        $did = substr($did, 1);
+    }
+
+    if ($did[0] == '1') {
+        $did = substr($did, 1);
+    }
+
+    $AGI->verbose($did);
+    return in_array($did, $numbers);
+}
